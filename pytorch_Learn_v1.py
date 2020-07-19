@@ -1,3 +1,5 @@
+# code 1
+# 仅供测试基本原理，列出公式
 import numpy as np
 import torch
 import torchvision
