@@ -4,6 +4,7 @@ import numpy as np
 
 NUM_DIGIT=10
 NUM_HIDDEN=100
+BATCH_SIZE=128
 
 # 定义fizzbuzz游戏
 def fiz_buz_encode(i):
@@ -27,13 +28,35 @@ def binary_encode(i,NUM_DIGIT):
     return np.array([i >> d & 1 for d in range(NUM_DIGIT)][::-1])
 
 # 初始化训练集
-Trx=torch.tensor([binary_encode(i,NUM_DIGIT) for i in range(101,2**NUM_DIGIT)])
-Try=torch.tensor([fiz_buz_encode(i) for i in range(101, 2**NUM_DIGIT)])
+Trx=torch.tensor([binary_encode(i,NUM_DIGIT) for i in range(101,2**NUM_DIGIT)],dtype=torch.float)
+Try=torch.LongTensor([fiz_buz_encode(i) for i in range(101, 2**NUM_DIGIT)])
 
 print(Trx.shape)
 print(Try.shape)
 
 model=nn.Sequential(nn.Linear(NUM_DIGIT,NUM_HIDDEN),nn.ReLU(),nn.Linear(NUM_HIDDEN,4))
 loss_fn=nn.CrossEntropyLoss()
-opitimizer=torch.optim.SGD(model.parameters(),lr=0.05)
+opitimizer=torch.optim.Adam(model.parameters(),lr=0.05)
+
+if torch.cuda.is_available():
+    model=model.cuda()
+    Trx=Trx.cuda()
+    Try=Try.cuda()
+
+for epoch in range(1,10000):
+    for start in range(0,len(Trx),BATCH_SIZE):
+        end=start+BATCH_SIZE
+        batchX=Trx[start:end]
+        batchY=Try[start:end]
+
+        y_pred=model(batchX)
+
+        loss=loss_fn(y_pred,batchY)
+
+        print("EPOCH",epoch, loss.item())
+
+        opitimizer.zero_grad()
+
+        loss.backward()
+        opitimizer.step()
 
