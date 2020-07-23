@@ -8,12 +8,15 @@ N,D_IN,H,D_OUT=64,1000,100,10
 
 t0=time.process_time()
 # 初始化
-x=torch.randn(N,D_IN).cuda()
-y=torch.randn(N,D_OUT).cuda()
+x=torch.randn(N,D_IN)
+y=torch.randn(N,D_OUT)
 
 # 设定model
 model=nn.Sequential(nn.Linear(D_IN,H), nn.ReLU(), nn.Linear(H,D_OUT))
-model.cuda()
+if (torch.cuda.is_available==True):
+    model.cuda()
+    x=x.cuda()
+    y=y.cuda()
 
 # 设定loss fun
 loss_fn=nn.MSELoss(reduction='sum')
