@@ -28,6 +28,8 @@ def binary_encode(i,NUM_DIGIT):
     return np.array([i >> d & 1 for d in range(NUM_DIGIT)][::-1])
 
 # 初始化训练集
+# x：从101到1024，转化为二进制
+# y：输出 1 2 3，即对应fizbuz游戏输出
 Trx=torch.tensor([binary_encode(i,NUM_DIGIT) for i in range(101,2**NUM_DIGIT)],dtype=torch.float)
 Try=torch.LongTensor([fiz_buz_encode(i) for i in range(101, 2**NUM_DIGIT)])
 
@@ -36,15 +38,16 @@ print(Try.shape)
 
 model=nn.Sequential(nn.Linear(NUM_DIGIT,NUM_HIDDEN),nn.ReLU(),nn.Linear(NUM_HIDDEN,4))
 loss_fn=nn.CrossEntropyLoss()
-opitimizer=torch.optim.Adam(model.parameters(),lr=0.05)
+opitimizer=torch.optim.Adam(model.parameters(),lr=0.03)
 
 if torch.cuda.is_available():
     model=model.cuda()
     Trx=Trx.cuda()
     Try=Try.cuda()
 
-for epoch in range(1,10000):
+for epoch in range(1,1000):
     for start in range(0,len(Trx),BATCH_SIZE):
+        # 训练集合：每次拿出BATCH数量的样本进行训练
         end=start+BATCH_SIZE
         batchX=Trx[start:end]
         batchY=Try[start:end]
@@ -60,3 +63,12 @@ for epoch in range(1,10000):
         loss.backward()
         opitimizer.step()
 
+testX=torch.tensor([binary_encode(i,NUM_DIGIT) for i in range(1,100)],dtype=torch.float)
+if torch.cuda.is_available()==True:
+    testX=testX.cuda()
+# 这么写是因为这个tensor不需要grad，可以避免爆内存 
+with torch.no_grad():
+    testY=model(testX)
+predictions=zip(range(1,100),testY.max(1)[1].data.tolist())
+
+print([fiz_buz_decode(i,x) for i,x in predictions])
