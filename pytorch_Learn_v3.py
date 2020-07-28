@@ -1,6 +1,9 @@
 import torch.nn as nn
 import torch
 import numpy as np
+import time
+
+start=time.process_time()
 
 NUM_DIGIT=10
 NUM_HIDDEN=100
@@ -38,14 +41,14 @@ print(Try.shape)
 
 model=nn.Sequential(nn.Linear(NUM_DIGIT,NUM_HIDDEN),nn.ReLU(),nn.Linear(NUM_HIDDEN,4))
 loss_fn=nn.CrossEntropyLoss()
-opitimizer=torch.optim.Adam(model.parameters(),lr=0.03)
+opitimizer=torch.optim.Adam(model.parameters(),lr=0.01)
 
 if torch.cuda.is_available():
     model=model.cuda()
     Trx=Trx.cuda()
     Try=Try.cuda()
 
-for epoch in range(1,1000):
+for epoch in range(1,2000):
     for start in range(0,len(Trx),BATCH_SIZE):
         # 训练集合：每次拿出BATCH数量的样本进行训练
         end=start+BATCH_SIZE
@@ -72,3 +75,5 @@ with torch.no_grad():
 predictions=zip(range(1,100),testY.max(1)[1].data.tolist())
 
 print([fiz_buz_decode(i,x) for i,x in predictions])
+end=time.process_time()
+print('time is %6.3f'%(end-start))
